@@ -1,0 +1,29 @@
+# Fly.io configuration. The API + built SPA run as one app on one origin.
+# Provision Postgres and attach it (sets DATABASE_URL):
+#   fly postgres create --name bookmarkvault-db
+#   fly postgres attach bookmarkvault-db
+#   fly secrets set JWT_SECRET=$(openssl rand -hex 32)
+app = "bookmarkvault"
+primary_region = "iad"
+
+[build]
+
+[env]
+  PORT = "3000"
+  HOST = "0.0.0.0"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+
+# Run pending migrations on each deploy, before the new release goes live.
+[deploy]
+  release_command = "pnpm --filter @bookmarkvault/api db:deploy"

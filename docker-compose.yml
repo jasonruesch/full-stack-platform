@@ -1,0 +1,23 @@
+# Local Postgres for development and tests. The API connects via DATABASE_URL
+# (see apps/api/.env.example). Data persists in the named volume.
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: bookmarkvault-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: bookmarkvault
+      POSTGRES_PASSWORD: bookmarkvault
+      POSTGRES_DB: bookmarkvault
+    ports:
+      - "5432:5432"
+    volumes:
+      - bookmarkvault-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bookmarkvault"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  bookmarkvault-pgdata:

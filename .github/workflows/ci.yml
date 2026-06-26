@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: bookmarkvault
+          POSTGRES_PASSWORD: bookmarkvault
+          POSTGRES_DB: bookmarkvault
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U bookmarkvault"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://bookmarkvault:bookmarkvault@localhost:5432/bookmarkvault?schema=public
+      JWT_SECRET: ci-secret-0123456789abcdef
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Prepare database
+        run: |
+          pnpm --filter @bookmarkvault/api db:generate
+          pnpm --filter @bookmarkvault/api db:deploy
+
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+
+      - name: E2E (Playwright)
+        run: |
+          # Reset re-applies migrations and runs the seed for deterministic data.
+          pnpm --filter @bookmarkvault/api db:reset
+          pnpm --filter @bookmarkvault/web exec playwright install --with-deps chromium
+          pnpm --filter @bookmarkvault/web test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
+          retention-days: 7
