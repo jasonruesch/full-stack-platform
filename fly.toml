@@ -9,7 +9,7 @@ primary_region = 'iad'
 [build]
 
 [deploy]
-  release_command = 'pnpm --filter @bookmarkvault/api db:deploy'
+  release_command = 'pnpm --filter @bookmarkvault/api db:deploy && pnpm --filter @bookmarkvault/api db:seed'
 
 [env]
   HOST = '0.0.0.0'
