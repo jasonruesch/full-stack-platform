@@ -1,5 +1,15 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalPassThroughEnv": [
+    "DATABASE_URL",
+    "JWT_SECRET",
+    "NODE_ENV",
+    "PORT",
+    "HOST",
+    "WEB_DIST",
+    "VITE_BASE",
+    "CI"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
