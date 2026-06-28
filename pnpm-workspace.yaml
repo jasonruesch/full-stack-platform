@@ -8,3 +8,5 @@ allowBuilds:
   prisma: true
   esbuild: true
   bcrypt: true
+minimumReleaseAgeExclude:
+  - '@jasonruesch/react@0.3.5'
